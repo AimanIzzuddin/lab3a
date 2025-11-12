@@ -11,7 +11,6 @@ module lab3a (
     output reg [6:0] d0  // ones digit
 );
 
-    reg [3:0] A_tens, A_ones, B_tens, B_ones;
     reg [4:0] LSBsum, MSBsum;
     reg LSBcout, greater;
     reg [3:0] d0_val, d1_val;
@@ -47,28 +46,22 @@ module lab3a (
         end
     endfunction
 
-    // Sequential process (load-triggered)
+    // Sequential process: update outputs when ld is HIGH
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
             d0 <= 7'b1111111;
             d1 <= 7'b1111111;
             d2 <= 7'b1111111;
         end
-        else if (!ld) begin
-            // latch and process
-            A_tens <= a[7:4];
-            A_ones <= a[3:0];
-            B_tens <= b[7:4];
-            B_ones <= b[3:0];
-
+        else if (ld) begin
             // Perform BCD addition
-            LSBsum = A_ones + B_ones + cin;
+            LSBsum  = a[3:0] + b[3:0] + cin;
             LSBcout = (LSBsum > 9);
-            d0_val = (LSBcout) ? (LSBsum - 10) : LSBsum;
+            d0_val  = LSBcout ? (LSBsum - 10) : LSBsum[3:0];
 
-            MSBsum = A_tens + B_tens + LSBcout;
+            MSBsum  = a[7:4] + b[7:4] + LSBcout;
             greater = (MSBsum > 9);
-            d1_val = (greater) ? (MSBsum - 10) : MSBsum;
+            d1_val  = greater ? (MSBsum - 10) : MSBsum[3:0];
 
             // Update outputs (7-segment encoded)
             d0 <= bcd_to_7seg(d0_val);
